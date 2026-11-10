@@ -1,0 +1,14 @@
+# Build artifacts (uploaded to GitHub Releases instead of repo tree)
+*.mcaddon
+*.mcpack
+
+# OS / Editor temporary files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.tmp
+*.bak
+*.swp
+*~
+.vscode/
+.idea/

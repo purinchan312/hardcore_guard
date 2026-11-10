@@ -1,0 +1,24 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "ハードコア荒らし対策（リソースパック）",
+    "description": "ハードコア荒らし対策・監視・高速追放アドオン（透過対策・独自アイコン）",
+    "uuid": "f1e2d3c4-b5a6-4987-9c8b-7a6f5e4d3c2b",
+    "version": [1, 0, 2],
+    "min_engine_version": [1, 21, 50]
+  },
+  "modules": [
+    {
+      "description": "ハードコア荒らし対策 リソースモジュール",
+      "type": "resources",
+      "uuid": "a9b8c7d6-e5f4-4321-8765-4321fedcba98",
+      "version": [1, 0, 2]
+    }
+  ],
+  "dependencies": [
+    {
+      "uuid": "8c4f9b2a-3d1e-4a7c-9e5b-1f2a3c4d5e6f",
+      "version": [1, 0, 2]
+    }
+  ]
+}

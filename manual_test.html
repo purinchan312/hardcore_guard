@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ハードコア荒らし対策アドオン 手動確認テストシート</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --accent: #38bdf8;
+      --ok: #22c55e;
+      --ok-bg: rgba(34, 197, 94, 0.14);
+      --ng: #ef4444;
+      --ng-bg: rgba(239, 68, 68, 0.14);
+      --pending: #64748b;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 24px 16px 64px;
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: "Meiryo", "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1020px;
+      margin: 0 auto;
+    }
+    header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 1.45rem;
+      color: var(--accent);
+    }
+    header p {
+      margin: 0;
+      font-size: 0.92rem;
+      color: var(--text-sub);
+    }
+    .dashboard {
+      position: sticky;
+      top: 10px;
+      z-index: 20;
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .stat-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+    .badge {
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+    }
+    .badge.ok { color: var(--ok); border-color: var(--ok); }
+    .badge.ng { color: var(--ng); border-color: var(--ng); }
+    .badge.wait { color: var(--text-sub); }
+    .progress-bar-wrap {
+      width: 100%;
+      height: 10px;
+      background: #0f172a;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #22c55e);
+      transition: width 0.25s ease;
+    }
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .filter-group, .action-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    button.btn {
+      background: #0f172a;
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button.btn:hover {
+      border-color: var(--accent);
+    }
+    button.btn.active {
+      background: var(--accent);
+      color: #0f172a;
+      border-color: var(--accent);
+      font-weight: bold;
+    }
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .section-header {
+      background: rgba(15, 23, 42, 0.6);
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--card-border);
+      font-weight: bold;
+      font-size: 1.05rem;
+      color: var(--accent);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .test-item {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--card-border);
+      transition: background 0.15s;
+    }
+    .test-item:last-child {
+      border-bottom: none;
+    }
+    .test-item.status-ok {
+      background: var(--ok-bg);
+    }
+    .test-item.status-ng {
+      background: var(--ng-bg);
+    }
+    .test-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .test-info {
+      flex: 1 1 520px;
+    }
+    .test-id {
+      font-size: 0.78rem;
+      color: var(--accent);
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    .test-title {
+      font-weight: bold;
+      font-size: 0.98rem;
+    }
+    .test-desc {
+      margin: 6px 0 0;
+      font-size: 0.88rem;
+      color: var(--text-sub);
+    }
+    .status-buttons {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .status-btn {
+      padding: 5px 11px;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+      background: #0f172a;
+      color: var(--text-sub);
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+    .status-btn.sel-wait {
+      background: #334155;
+      color: #fff;
+      border-color: #64748b;
+      font-weight: bold;
+    }
+    .status-btn.sel-ok {
+      background: var(--ok);
+      color: #052e16;
+      border-color: var(--ok);
+      font-weight: bold;
+    }
+    .status-btn.sel-ng {
+      background: var(--ng);
+      color: #fff;
+      border-color: var(--ng);
+      font-weight: bold;
+    }
+    .note-input {
+      width: 100%;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+      background: rgba(15, 23, 42, 0.75);
+      color: var(--text-main);
+      font-size: 0.84rem;
+    }
+    .note-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🛡️ ハードコア荒らし対策アドオン 手動確認テストシート</h1>
+      <p>
+        実際のハードコア／マルチプレイ環境で1項目ずつ動作を確認するためのチェックシートです。<br />
+        チェック状態とメモはブラウザ（ローカル保存）に自動記録されるため、複数日に分けてプレイしながら確認できます。
+      </p>
+    </header>
+
+    <div class="dashboard">
+      <div class="stats-row">
+        <div class="stat-badges">
+          <span class="badge" id="stat-total">全項目: 0</span>
+          <span class="badge ok" id="stat-ok">確認OK: 0</span>
+          <span class="badge ng" id="stat-ng">要修正: 0</span>
+          <span class="badge wait" id="stat-wait">未確認: 0</span>
+        </div>
+        <div id="stat-percent" style="font-weight: bold; color: var(--accent);">進捗 0%</div>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      <div class="controls-row">
+        <div class="filter-group">
+          <button class="btn active" data-filter="all">すべて表示</button>
+          <button class="btn" data-filter="wait">未確認のみ</button>
+          <button class="btn" data-filter="ok">確認OKのみ</button>
+          <button class="btn" data-filter="ng">要修正のみ</button>
+        </div>
+        <div class="action-group">
+          <button class="btn" id="btn-export">📋 結果をクリップボードにコピー</button>
+          <button class="btn" id="btn-reset">🔄 状態を初期化</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="checklist-root"></div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "hc_guard_manual_test_v1";
+
+    const TEST_SECTIONS = [
+      {
+        sectionTitle: "1. 初期導入・最高管理者登録・管理者端末の保護",
+        items: [
+          {
+            id: "T01",
+            title: "初回入室時の最高管理者自動登録",
+            desc: "ワールド作成後、最初に入室したプレイヤーが自動的に「最高管理者」として登録され、チャットに日本語の登録通知が表示されること。"
+          },
+          {
+            id: "T02",
+            title: "管理者端末の自動配布と日本語名称表示",
+            desc: "最高管理者のインベントリに「管理者端末」が1個自動配布され、英語表記ではなく日本語名「管理者端末」と表示されること。"
+          },
+          {
+            id: "T03",
+            title: "管理者端末の移動・ドロップ・クラフト禁止ロック",
+            desc: "管理者端末を地面に捨てる（ドロップ）、チェストやディスペンサーに入れる、作業台で素材にすることが一切できないこと。"
+          }
+        ]
+      },
+      {
+        sectionTitle: "2. 右上サイドバー表示・アイコン視認性（修正確認）",
+        items: [
+          {
+            id: "T04",
+            title: "サイドバー最上段のドクロアイコンと「死者 : 0」の視認性",
+            desc: "右上サイドバー最上段のドクロアイコンが文字と同じ8×8サイズで表示され、「死者 : 0」の「死」の文字に重ならずはっきり読めること。"
+          },
+          {
+            id: "T05",
+            title: "サイドバー5項目（マグマ・火薬箱・火薬車・結晶・アンカー）のアイコン視認性",
+            desc: "右側サイドバーの各アイコンが上下の行と重ならず、右隣の文字（マグマ・火薬箱・火薬車・結晶・アンカー）に被らずに読めること。"
+          },
+          {
+            id: "T06",
+            title: "メインメニュー内のドクロアイコン視認性",
+            desc: "管理者端末を開いたメインメニュー本文の「💀 死者: ○名」で、ドクロアイコンが「死」の文字に重ならずはっきり見えること。"
+          }
+        ]
+      },
+      {
+        sectionTitle: "3. 最優先危険物（5種）の入手・使用・設置監視",
+        items: [
+          {
+            id: "T07",
+            title: "マグマバケツの入手検知とサイドバー加算（前回テスト項目）",
+            desc: "バケツで溶岩をすくう、またはチェストからマグマバケツを取り出した際、チャットに「オーバーワールド (座標) で マグマバケツ を 入手 (+1) しました」と警告音付きで通知され、右サイドバーの「マグマ」数値が増えること。"
+          },
+          {
+            id: "T08",
+            title: "マグマバケツの使用（設置）検知とデバウンス（前回テスト項目）",
+            desc: "マグマバケツを使用した際、チャットに1回だけ「マグマバケツ を 使用 しました」と警告通知され、警告アイコンが「[監視警告]」の文字に被らないこと。"
+          },
+          {
+            id: "T09",
+            title: "火薬ブロック（TNT）の入手・設置検知",
+            desc: "TNTを入手した際に「入手」通知とサイドバー「火薬箱」の数値増加が行われ、地面に設置した際に「設置」通知が発火すること。"
+          },
+          {
+            id: "T10",
+            title: "TNT付きトロッコの入手・レール上への設置検知",
+            desc: "TNT付きトロッコを入手した際にサイドバー「火薬車」が増加し、レール上に使用（設置）した際に警告通知が発火すること。"
+          },
+          {
+            id: "T11",
+            title: "エンドクリスタルの入手・使用検知",
+            desc: "エンドクリスタルを入手した際にサイドバー「結晶」が増加し、黒曜石や岩盤に使用した際に警告通知が発火すること。"
+          },
+          {
+            id: "T12",
+            title: "リスポーンアンカーの入手・設置・起爆操作検知",
+            desc: "リスポーンアンカーを入手した際にサイドバー「アンカー」が増加し、設置時およびグロウストーンチャージ・右クリック操作時に警告通知が発火すること。"
+          },
+          {
+            id: "T13",
+            title: "再入室（ログイン）時の既存所持分に対する誤通知防止",
+            desc: "危険物を持った状態で一度退出し再入室した際、最初から持っていた分に対しては「入手」の誤通知が出ないこと。"
+          }
+        ]
+      },
+      {
+        sectionTitle: "4. 警戒対象物（5種）の使用・設置・ディスペンサー開閉監視",
+        items: [
+          {
+            id: "T14",
+            title: "ディスペンサーの設置検知と「開操作」の監査ログ記録",
+            desc: "ディスペンサーを設置した際に警告通知が出ること。また、ディスペンサーを右クリックして開いただけで監査ログに「[ディスペンサー開]」が記録されること。"
+          },
+          {
+            id: "T15",
+            title: "火打石と打ち金の使用・着火検知",
+            desc: "火打石と打ち金でブロックやTNT、クリーパー等に着火した際に警告通知と監査ログ記録が行われること。"
+          },
+          {
+            id: "T16",
+            title: "ファイヤーチャージの使用検知",
+            desc: "ファイヤーチャージを使用して着火した際に警告通知と監査ログ記録が行われること。"
+          },
+          {
+            id: "T17",
+            title: "粉雪入りバケツの使用検知",
+            desc: "粉雪入りバケツを設置（使用）した際に警告通知と監査ログ記録が行われること。"
+          },
+          {
+            id: "T18",
+            title: "ウィザースケルトンの頭蓋骨の設置検知",
+            desc: "ウィザースケルトンの頭蓋骨を設置した際に警告通知と監査ログ記録が行われること。"
+          }
+        ]
+      },
+      {
+        sectionTitle: "5. コンテナ出し入れ差分追跡と日本語アイテム名表示",
+        items: [
+          {
+            id: "T19",
+            title: "チェスト・ディスペンサー出し入れ差分の日本語記録",
+            desc: "チェストやディスペンサーにアイテムを出し入れして離れた後、監査ログ検索で「[コンテナ差分]」を確認した際、英語ID（minecraft:stick等）ではなく「棒 (+5), 丸石 (-2)」のようにすべて日本語アイテム名で表示されること。"
+          }
+        ]
+      },
+      {
+        sectionTitle: "6. 管理者端末の2段階起動・参加者持ち物検査（完全日本語確認）",
+        items: [
+          {
+            id: "T20",
+            title: "通常使用（メインメニュー）とスニーク使用（緊急一括追放直行）",
+            desc: "非スニーク状態で端末を使うと「メインメニュー」が開き、スニーク（しゃがみ）状態で端末を使うと即座に「緊急一括追放」画面が直接開くこと。"
+          },
+          {
+            id: "T21",
+            title: "参加者一覧の危険物所持者ソートと日本語ディメンション表示",
+            desc: "参加者一覧で危険物所持者が赤字で最上段に表示され、ディメンション名が「オーバーワールド / ネザー / ジ・エンド」と日本語で表示されること。"
+          },
+          {
+            id: "T22",
+            title: "個別持ち物検査での全アイテム日本語表示",
+            desc: "参加者の持ち物検査画面を開いた際、危険物だけでなく一般アイテム（棒・松明・丸石・土・食料・装備など）もすべて英語なしで日本語名で一覧表示されること。"
+          }
+        ]
+      },
+      {
+        sectionTitle: "7. 単発追放・永久追放・ワールド跨ぎ引き継ぎ",
+        items: [
+          {
+            id: "T23",
+            title: "持ち物検査画面・緊急一括追放からの「単発追放」（前回テスト項目）",
+            desc: "対象プレイヤーに「単発追放」を実行すると即座にワールドから追放され、追放済み一覧に「[単発追放]」として記録されること（※ローカルマルチではホスト再起動後に再入室可能）。"
+          },
+          {
+            id: "T24",
+            title: "「永久追放」登録と再接続時の自動追放",
+            desc: "「永久追放」を実行したプレイヤーは、ホストがワールドを再起動した後に再入室を試みても、入室直後に自動追放されること。"
+          },
+          {
+            id: "T25",
+            title: "最高管理者の絶対保護確認",
+            desc: "緊急一括追放リストや持ち物検査の追放ボタンに最高管理者自身は表示されず、誤って自分自身を追放してしまうことがないこと。"
+          },
+          {
+            id: "T26",
+            title: "追放リストのコピー出力・貼り付け取り込み・追放解除",
+            desc: "「追放済み一覧・永久追放引き継ぎ」から文字列をコピーでき、別ワールドで貼り付け取り込みすると永久追放として登録され、また最高管理者は個別画面から追放解除（完全削除）ができること。"
+          }
+        ]
+      },
+      {
+        sectionTitle: "8. 監査ログ検索・戦没者管理・副管理者管理",
+        items: [
+          {
+            id: "T27",
+            title: "監査ログ検索画面の文字重なり解消と絞り込み検索",
+            desc: "監査ログ検索結果ヘッダ（「検索フィルタ」「表示結果: ○項目」）で文字の重なりが一切なく、プレイヤー別・種別・座標半径での絞り込みが正常に動作すること。"
+          },
+          {
+            id: "T28",
+            title: "プレイヤー死亡時のチャット報告・ドクロ数加算・カウント除外切替",
+            desc: "プレイヤーが死亡した際、日本語の死因付きで全体チャット報告が出力され、右サイドバーのドクロ数が+1されること。また「戦没者一覧」からクリックでドクロ数のカウント除外/対象を即座に切り替えられること。"
+          },
+          {
+            id: "T29",
+            title: "副管理者（協力者）の任命・端末自動配布・解任時の自動回収",
+            desc: "最高管理者がオンライン参加者を副管理者に任命すると相手に「管理者端末」が自動配布され、解任すると相手のインベントリから「管理者端末」が自動回収されること。"
+          },
+          {
+            id: "T30",
+            title: "副管理者の操作権限制限の確認",
+            desc: "副管理者は「持ち物検査・監査ログ検索・緊急追放」は行えるが、「副管理者管理・永久追放の解除・追放リスト取り込み・戦没者カウント除外変更」は実行できないこと。"
+          }
+        ]
+      }
+    ];
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch {}
+      // 前回テスト済みのマグマ入手・使用・単発追放・持ち物検査・コンテナ差分に初期メモを入れておく
+      return {
+        T07: { status: "ok", note: "初回テストにてマグマバケツ入手通知を確認済み" },
+        T08: { status: "ok", note: "初回テストにてマグマバケツ使用通知を確認済み（アイコンサイズ修正後の再確認推奨）" },
+        T23: { status: "ok", note: "初回テストにて単発追放の動作を確認済み" }
+      };
+    }
+
+    function saveState(state) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {}
+    }
+
+    let appState = loadState();
+    let currentFilter = "all";
+
+    function render() {
+      const root = document.getElementById("checklist-root");
+      root.innerHTML = "";
+
+      let total = 0;
+      let okCount = 0;
+      let ngCount = 0;
+      let waitCount = 0;
+
+      for (const sec of TEST_SECTIONS) {
+        const card = document.createElement("div");
+        card.className = "section-card";
+
+        const header = document.createElement("div");
+        header.className = "section-header";
+        header.textContent = sec.sectionTitle;
+        card.appendChild(header);
+
+        let visibleInSec = 0;
+
+        for (const item of sec.items) {
+          total++;
+          const st = appState[item.id]?.status || "wait";
+          const note = appState[item.id]?.note || "";
+
+          if (st === "ok") okCount++;
+          else if (st === "ng") ngCount++;
+          else waitCount++;
+
+          if (currentFilter !== "all" && st !== currentFilter) {
+            continue;
+          }
+          visibleInSec++;
+
+          const row = document.createElement("div");
+          row.className = `test-item ${st === "ok" ? "status-ok" : st === "ng" ? "status-ng" : ""}`;
+
+          const top = document.createElement("div");
+          top.className = "test-top";
+
+          const info = document.createElement("div");
+          info.className = "test-info";
+          info.innerHTML = `
+            <div><span class="test-id">[${item.id}]</span><span class="test-title">${item.title}</span></div>
+            <p class="test-desc">${item.desc}</p>
+          `;
+
+          const btns = document.createElement("div");
+          btns.className = "status-buttons";
+
+          const makeBtn = (key, label, cls) => {
+            const b = document.createElement("button");
+            b.className = `status-btn ${st === key ? cls : ""}`;
+            b.textContent = label;
+            b.onclick = () => {
+              appState[item.id] = { status: key, note: appState[item.id]?.note || "" };
+              saveState(appState);
+              render();
+            };
+            return b;
+          };
+
+          btns.appendChild(makeBtn("wait", "未確認", "sel-wait"));
+          btns.appendChild(makeBtn("ok", "確認OK", "sel-ok"));
+          btns.appendChild(makeBtn("ng", "要修正", "sel-ng"));
+
+          top.appendChild(info);
+          top.appendChild(btns);
+          row.appendChild(top);
+
+          const input = document.createElement("input");
+          input.type = "text";
+          input.className = "note-input";
+          input.placeholder = "メモ・気づいた点を入力（自動保存されます）...";
+          input.value = note;
+          input.oninput = (e) => {
+            appState[item.id] = {
+              status: appState[item.id]?.status || "wait",
+              note: e.target.value
+            };
+            saveState(appState);
+          };
+          row.appendChild(input);
+
+          card.appendChild(row);
+        }
+
+        if (visibleInSec > 0) {
+          root.appendChild(card);
+        }
+      }
+
+      document.getElementById("stat-total").textContent = `全項目: ${total}`;
+      document.getElementById("stat-ok").textContent = `確認OK: ${okCount}`;
+      document.getElementById("stat-ng").textContent = `要修正: ${ngCount}`;
+      document.getElementById("stat-wait").textContent = `未確認: ${waitCount}`;
+
+      const pct = total > 0 ? Math.round((okCount / total) * 100) : 0;
+      document.getElementById("stat-percent").textContent = `進捗 ${pct}% (${okCount}/${total})`;
+      document.getElementById("progress-fill").style.width = `${pct}%`;
+    }
+
+    document.querySelectorAll("[data-filter]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-filter]").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFilter = btn.getAttribute("data-filter");
+        render();
+      });
+    });
+
+    document.getElementById("btn-export").addEventListener("click", () => {
+      const lines = ["# ハードコア荒らし対策アドオン 手動確認テスト結果"];
+      for (const sec of TEST_SECTIONS) {
+        lines.push(`\n## ${sec.sectionTitle}`);
+        for (const item of sec.items) {
+          const st = appState[item.id]?.status || "wait";
+          const mark = st === "ok" ? "[OK]" : st === "ng" ? "[要修正]" : "[未確認]";
+          const note = appState[item.id]?.note ? ` - メモ: ${appState[item.id].note}` : "";
+          lines.push(`- ${mark} ${item.id} ${item.title}${note}`);
+        }
+      }
+      navigator.clipboard.writeText(lines.join("\n")).then(() => {
+        alert("テスト結果をクリップボードにコピーしました！");
+      });
+    });
+
+    document.getElementById("btn-reset").addEventListener("click", () => {
+      if (confirm("すべてのチェック状態とメモを初期化しますか？")) {
+        appState = {};
+        saveState(appState);
+        render();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

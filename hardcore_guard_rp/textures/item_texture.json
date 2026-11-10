@@ -1,0 +1,9 @@
+{
+  "resource_pack_name": "hardcore_guard_rp",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "hc_op_terminal": {
+      "textures": "textures/items/op_terminal"
+    }
+  }
+}
